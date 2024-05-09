@@ -44,7 +44,8 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   bool isPlaying = true;
-  late Timer _timer;
+  // Used to save Timer periodic in a variable and then use it
+  // late Timer _timer;
   late String _lastMinute;
 
   @override
@@ -53,14 +54,16 @@ class _MyHomePageState extends State<MyHomePage> {
     playWelcomeBackAudio(widget.audioPlayer);
     _lastMinute = _getCurrentMinute();
     _startTimer();
+    calculateRemainingMinutes24("23:15");
   }
 
   void _startTimer() {
-    _timer = Timer.periodic(Duration(seconds: 1), (Timer timer) {
+    Timer.periodic(Duration(seconds: 1), (Timer timer) {
       String currentMinute = _getCurrentMinute();
       if (currentMinute != _lastMinute) {
         // Minute has changed, call your function here
         sortAudioToPlay(widget.audioPlayer, isPlaying);
+        setState(() {});
         _lastMinute = currentMinute;
       }
     });
@@ -103,11 +106,15 @@ class _MyHomePageState extends State<MyHomePage> {
           padding: EdgeInsets.all(10.0),
           // List of widgets to display in the grid
           children: List.generate(cetTimeSchedule.length, (index) {
-            return Center(
-              child: Text(
-                cetTimeSchedule[index],
-                style: TextStyle(
-                    fontSize: 16.0, color: colorSorter(cetTimeSchedule[index])),
+            return Container(
+              decoration: setNextBossCell(index),
+              child: Center(
+                child: Text(
+                  cetTimeSchedule[index],
+                  style: TextStyle(
+                      fontSize: 16.0,
+                      color: colorSorter(cetTimeSchedule[index])),
+                ),
               ),
             );
           })),
