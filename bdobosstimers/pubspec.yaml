@@ -11,7 +11,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  audioplayers: ^4.0.0
+  audioplayers: ^5.0.0
+  intl: ^0.17.0
 
   english_words: ^4.0.0
   provider: ^6.0.0
@@ -26,3 +27,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/Test.mp3
+    - assets/welcome_back.m4a
+    - assets/the_boss_will_spawn_in_30min_2.m4a
+    - assets/the_boss_will_spawn_in_15min.m4a
+    - assets/the_boss_will_spawn_soon.m4a

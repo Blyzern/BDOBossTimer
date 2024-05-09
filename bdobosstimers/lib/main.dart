@@ -1,101 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'dart:async';
+import 'package:intl/intl.dart';
+import 'variables&functions.dart';
 
 void main() {
   runApp(const MyApp());
 }
-
-List<String> cetTimeSchedule = [
-  "CET",
-  "00:15",
-  "02:00",
-  "05:00",
-  "09:00",
-  "12:00",
-  "14:00",
-  "16:00",
-  "19:00",
-  "22:15",
-  "23:15",
-  "Mon",
-  "Katum\nKaranda",
-  "Karanda",
-  "Kzarka",
-  "Kzarka",
-  "Offin",
-  "Garmoth",
-  "Kutum",
-  "Nouver",
-  "Kzarka",
-  "Garmoth",
-  "Tue",
-  "Karanda",
-  "Kutum",
-  "Kzarka",
-  "Nouver",
-  "Kutum",
-  "Garmoth",
-  "Nouver",
-  "Karanda",
-  "Quint\nMuraka",
-  "Garmoth",
-  "Wed",
-  "Kzarka\nKutum",
-  "Karanda",
-  "Kzarka",
-  "Karanda",
-  "-",
-  "Garmoth",
-  "Kutum\nOffin",
-  "Vell",
-  "Karanda\nKzarka",
-  "Garmoth",
-  "Thu",
-  "Nouver",
-  "Kutum",
-  "Nouver",
-  "Kutum",
-  "Nouver",
-  "Garmoth",
-  "Kzarka",
-  "Kutum",
-  "Quint\nMuraka",
-  "Garmoth",
-  "Fri",
-  "Kzarka\nKaranda",
-  "Nouver",
-  "Karanda",
-  "Kutum",
-  "Karanda",
-  "Garmoth",
-  "Nouver",
-  "Kzarka",
-  "Kzarka\nKutum",
-  "Garmoth",
-  "Sat",
-  "Karanda",
-  "Offin",
-  "Nouver",
-  "Kutum",
-  "Nouver",
-  "Garmoth",
-  "-",
-  "Kzarka\nKaranda",
-  "-",
-  "-",
-  "Sun",
-  "Nouver\nKutum",
-  "Kzarka",
-  "Kutum",
-  "Nouver",
-  "Kzarka",
-  "Garmoth",
-  "Vell",
-  "Garmoth",
-  "Kzarka\nNouver",
-  "Garmoth",
-];
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -114,7 +25,7 @@ class MyApp extends StatelessWidget {
           onPrimary: Colors.white,
         ),
       ),
-      home: const MyHomePage(
+      home: MyHomePage(
         title: "BDO Boss Timer",
       ),
     );
@@ -122,58 +33,65 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
+  MyHomePage({super.key, required this.title});
 
   final String title;
+  final audioPlayer = AudioPlayer();
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final audioPlayer = AudioPlayer();
-  bool isPlaying = false;
-  Duration duration = Duration.zero;
-  Duration position = Duration.zero;
+  bool isPlaying = true;
+  late Timer _timer;
+  late String _lastMinute;
 
   @override
   void initState() {
     super.initState();
-    playSong();
+    playWelcomeBackAudio(widget.audioPlayer);
+    _lastMinute = _getCurrentMinute();
+    _startTimer();
   }
 
-  Future playSong() async {
-    audioPlayer.play(AssetSource("Test.mp3"));
+  void _startTimer() {
+    _timer = Timer.periodic(Duration(seconds: 1), (Timer timer) {
+      String currentMinute = _getCurrentMinute();
+      if (currentMinute != _lastMinute) {
+        // Minute has changed, call your function here
+        sortAudioToPlay(widget.audioPlayer, isPlaying);
+        _lastMinute = currentMinute;
+      }
+    });
+  }
+
+  String _getCurrentMinute() {
+    return DateFormat('mm').format(DateTime.now());
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        centerTitle: true,
-        title: Text(widget.title),
-      ),
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          centerTitle: true,
+          title: Text(widget.title),
+          actions: [
+            IconButton(
+              padding: EdgeInsets.all(8.0),
+              onPressed: () => {
+                setState(() {
+                  isPlaying ? isPlaying = false : isPlaying = true;
+
+                  if (!isPlaying) {
+                    stopAudio(isPlaying, widget.audioPlayer);
+                  }
+                })
+              },
+              icon: isPlayingCheck(isPlaying),
+            )
+          ]),
       body: GridView.count(
           // Number of columns in the grid
           crossAxisCount: 11,
@@ -195,43 +113,4 @@ class _MyHomePageState extends State<MyHomePage> {
           })),
     );
   }
-}
-
-Color colorSorter(String name) {
-  switch (name) {
-    case "Kutum":
-      return Colors.purple;
-    case "Karanda":
-      return Colors.blue;
-    case "Kzarka":
-      return Colors.red;
-    case "Offin":
-      return Colors.green;
-    case "Garmoth":
-      return Color.fromARGB(255, 207, 97, 88);
-    case "Nouver":
-      return Color.fromARGB(255, 216, 126, 69);
-    case "Vell":
-      return Color.fromARGB(255, 71, 193, 202);
-    case "Quint\nMuraka":
-      return Color.fromARGB(255, 216, 95, 129);
-    default:
-      return Colors.white;
-  }
-}
-
-// Function to calculate remaining minutes from input time in a 24-hour format
-int calculateRemainingMinutes24(String inputTime) {
-  // Split the input time into hours and minutes
-  List<String> parts = inputTime.split(':');
-  int inputHours = int.parse(parts[0]);
-  int inputMinutes = int.parse(parts[1]);
-
-  // Total minutes in a day (24 hours)
-  int totalMinutesInDay = 24 * 60;
-  // Convert input time to minutes
-  int totalInputMinutes = (inputHours * 60) + inputMinutes;
-  // Calculate remaining minutes
-  int remainingMinutes = totalMinutesInDay - totalInputMinutes;
-  return remainingMinutes;
 }
