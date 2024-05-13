@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'dart:async';
 import 'package:intl/intl.dart';
-import 'variables&functions.dart';
+
+import 'variables_functions.dart';
 
 void main() {
   runApp(const MyApp());
@@ -44,6 +45,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   bool isPlaying = true;
+  String settings = defaultSettings;
   // Used to save Timer periodic in a variable and then use it
   // late Timer _timer;
   late String _lastMinute;
@@ -51,10 +53,18 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    playWelcomeBackAudio(widget.audioPlayer);
+    // this is to avoid perma reloading or calling the function inside the builder so we make the instance of the callFunction
+    _setSettings();
     _lastMinute = _getCurrentMinute();
     _startTimer();
-    calculateRemainingMinutes24("23:15");
+  }
+
+  Future _setSettings() async {
+    settings = await runCheckSettings();
+    setState(() {
+      isPlaying = setIsPlaying(settings);
+    });
+    playWelcomeBackAudio(widget.audioPlayer, isPlaying);
   }
 
   void _startTimer() {
@@ -86,7 +96,9 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: () => {
                 setState(() {
                   isPlaying ? isPlaying = false : isPlaying = true;
-
+                  isPlaying
+                      ? writeSetting("isPlaying=true;")
+                      : writeSetting("isPlaying=false;");
                   if (!isPlaying) {
                     stopAudio(isPlaying, widget.audioPlayer);
                   }

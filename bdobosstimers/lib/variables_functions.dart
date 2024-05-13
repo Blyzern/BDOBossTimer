@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'dart:async';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 
-List<String> bossTimers = [
+const String defaultSettings = "isPlaying=true;";
+
+const List<String> bossTimers = [
   "00:15",
   "02:00",
   "05:00",
@@ -15,9 +19,7 @@ List<String> bossTimers = [
   "23:15"
 ];
 
-List<int> bossHoursTimers = [0, 02, 05, 09, 12, 14, 16, 19, 22, 23];
-
-List<String> cetTimeSchedule = [
+const List<String> cetTimeSchedule = [
   "CET",
   "00:15",
   "02:00",
@@ -116,8 +118,10 @@ List<String> cetTimeSchedule = [
 //   }
 // }
 
-Future playWelcomeBackAudio(AudioPlayer audioPlayer) async {
-  await audioPlayer.play(AssetSource("welcome_back.m4a"));
+Future playWelcomeBackAudio(AudioPlayer audioPlayer, bool isPlaying) async {
+  if (isPlaying) {
+    await audioPlayer.play(AssetSource("welcome_back.m4a"));
+  }
 }
 
 Future stopAudio(bool isPlaying, AudioPlayer audioPlayer) async {
@@ -209,7 +213,6 @@ bool isCurrentHourLessThan(String inputHour) {
 
   // Compare the current time with the input time
   if (now.isBefore(inputDateTime)) {
-    print(inputDateTime);
     return true;
   }
   return false;
@@ -239,7 +242,6 @@ int getCurrentHour() {
 
   // Get the hour component from the DateTime object
   currentHour = now.hour;
-  print(currentHour);
   return currentHour;
 }
 
@@ -299,4 +301,54 @@ int _getWeekdayPosition(int weekday) {
     default:
       return 0;
   }
+}
+
+Future<String> get _localPath async {
+  final directory = await getApplicationDocumentsDirectory();
+  String folderName = "BDOBossTimer";
+
+  // Create the folder if it doesn't exist
+  Directory newDirectory = Directory('${directory.path}/$folderName');
+
+  if (!(await newDirectory.exists())) {
+    await newDirectory.create(recursive: true);
+    return newDirectory.path;
+  } else {
+    return newDirectory.path;
+  }
+}
+
+Future<File> get _localFile async {
+  final path = await _localPath;
+  return File('$path/settings.txt');
+}
+
+Future<File> writeSetting(String setting) async {
+  final file = await _localFile;
+  // Write the file
+  return file.writeAsString(setting);
+}
+
+Future<String> readSettings() async {
+  try {
+    final file = await _localFile;
+    // Read the file
+    final contents = await file.readAsString();
+    return contents;
+  } catch (e) {
+    return "";
+  }
+}
+
+Future<String> runCheckSettings() async {
+  String settings = await readSettings();
+  if (settings == "") {
+    await writeSetting("isPlaying=true;");
+    return await readSettings();
+  }
+  return settings;
+}
+
+bool setIsPlaying(String settings) {
+  return settings.contains('isPlaying=true;');
 }
